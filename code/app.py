@@ -2,18 +2,15 @@ import streamlit as st
 import re
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from sentence_transformers import SentenceTransformer
+import torch
 import numpy as np
 
-# @st.cache
+@st.cache_data
 def load_model():
-  tokenizer = AutoTokenizer.from_pretrained("mt5-base-ThaiGovAI")
-  model = AutoModelForSeq2SeqLM.from_pretrained("mt5-base-ThaiGovAI")
+  device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  tokenizer = AutoTokenizer.from_pretrained("Arnajak/mt5_base-thai_government_parapharse")
+  model = AutoModelForSeq2SeqLM.from_pretrained("Arnajak/mt5_base-thai_government_parapharse").to(device)
   return model, tokenizer
-
-# @st.cache
-# def load_sim():
-#   model = SentenceTransformer("sim_model")
-#   return model
 
 def post_process(informal_text,pred,sim_model=None):
 
@@ -64,20 +61,13 @@ def post_process(informal_text,pred,sim_model=None):
 
     if len(pred) < 3 : 
        pred = "ยังไม่สามารถทำได้ในขณะนี้"
-    # # Similarity check 
-    # if sim_model != None:
-    #     a_vec = sim_model.encode(informal_text,normalize_embeddings=True)
-    #     b_vec = sim_model.encode(pred,normalize_embeddings=True)
-    #     sim_score = np.inner(a_vec, b_vec)
-    #     if sim_score < 0.3 : 
-    #         print(sim_score)
-    #         pred = "ยังไม่สามารถทำได้ในขณะนี้"
 
     return pred.strip()
 
 def prediction(user_input,model,tokenizer,sim_model=None):
     text = "paraphrase: "+ user_input
-    batch = tokenizer(text , return_tensors='pt')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    batch = tokenizer(text , return_tensors='pt').to(device)
     output_tokens = model.generate(**batch,max_length=768,top_k=50, top_p=0.95, temperature=1)
     output = tokenizer.decode(output_tokens[0], skip_special_tokens=True)
     output = post_process(user_input,output,sim_model)
@@ -95,12 +85,12 @@ def main():
       st.markdown("<h3 style='text-align: center; color: white;'>Informal style</h3>", unsafe_allow_html=True)
       option = st.selectbox('Select example',options=("Select example",'Example 1', 'Example 2', 'Example 3'))
       if option == "Example 1":
-        st.session_state.input = "ให้ยกเลิกประกาศว่า มีสถานการณ์ฉุกเฉินอันตรายในพื้นที่ในกรุงเทพฯ จังหวัดนนทบุรี อำเภอลาดหลุมแก้ว จังหวัดปทุมธานี และอำเภอบางพลีจังหวัดสมุทรปราการ ในวันที่ ๒๑ มกราคม พ.ศ. ๒๕๕๗"
+        st.session_state.input = "เพื่อให้เราแก้ไขปัญหาความไม่สงบได้อย่างสงบสุข โดยไม่เสียชีวิตหรือทรัพย์สินของคนในทีม จึงขอเชิญคุณมาร่วมประชุมในวันที่ 20 พฤษภาคม พุทธศักราช 2557 เวลา 14:00 "
       elif option == "Example 2":
-        st.session_state.input = "ห้ามขายสินค้าผิดกฎหมาย"
+        st.session_state.input = "ห้ามขายสินค้าที่ผิดกฎหมาย"
       elif option == "Example 3":
         st.session_state.input = "ข้อ 5 ติดตามค่าใช้จ่ายด้านการเรียน"
-      user_input = st.text_area("",st.session_state.input,height =300,key=1)
+      user_input = st.text_area("",st.session_state.input,height =300,label_visibility="collapsed",key=1)
 
     with col2:
       st.write("")
@@ -118,16 +108,12 @@ def main():
       st.write("")
       button = st.button('➜')
       if button:
-        # prediction(user_input,model,tokenizer,sim_model)
         prediction(user_input,model,tokenizer) 
 
     with col3:
       st.markdown("<h3 style='text-align: center; color: white;'>Government style</h3>", unsafe_allow_html=True)
       rate = st.selectbox('Please rate my answer!',options=('5', '4', '3','2','1'))
-      st.text_area("",st.session_state.output, height =300,key=2)
-
-
-
+      st.text_area("",st.session_state.output,label_visibility="collapsed", height =300,key=2)
 
 
 if __name__ == "__main__":
