@@ -20,5 +20,5 @@ RUN pip3 install streamlit
 RUN pip3 install altair 
 
 COPY ./code /root/code
-# CMD tail -f /dev/null
-CMD streamlit run app.py --server.port=80 --server.address=0.0.0.0
+CMD tail -f /dev/null
+# CMD streamlit run app.py --server.port=80 --server.address=0.0.0.0
