@@ -1,11 +1,11 @@
 version: "3.7"
 services:
   web:
-    image: akraradets/brainlab-aitgpt-cuda:1.0.1
+    image: akraradets/brainlab-thaigovai:0.0.1
     build:
       context: .
       dockerfile: .Dockerfile
-    command: streamlit run app.py --server.port=80 --server.address=0.0.0.0
+    # command: streamlit run app.py --server.port=80 --server.address=0.0.0.0
     # For development purpose, we map the entire `code` folder so it is convenient for development.
     volumes:
       - ./logs:/root/logs
@@ -13,13 +13,14 @@ services:
       # These two is for development only
       - ./code:/root/code
       # - ./.vscode-server:/root/.vscode-server
-    labels:
-      - traefik.enable=true
-      - traefik.http.services.web-aitgpt.loadbalancer.server.port=80
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.http.services.web-aitgpt.loadbalancer.server.port=80
       # This is for SSL
       # - traefik.http.routers.web-aitgpt.tls=true
       # - traefik.http.routers.web-aitgpt.entrypoints=entry-default
-    # ports:
+    ports:
+      - 5000:80
       # We map the port 9000 from host to 8080 in the container, so you can acess your api without traefik.
       # If you already use 9000, just change to another port.
       # This is for development only.
@@ -27,9 +28,9 @@ services:
       # - 9000:8080
     env_file:
       - .env
-    networks:
-      - default
-      - traefik_default
+    # networks:
+    #   - default
+    #   - traefik_default
     # deploy:
     #   resources:
     #     reservations:
@@ -38,7 +39,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
 
-networks:
-  default:
-  traefik_default:
-    external: true
+# networks:
+#   default:
+#   traefik_default:
+#     external: true

@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 import torch
 import numpy as np
 
-@st.cache_data
+@st.cache_resource
 def load_model():
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   tokenizer = AutoTokenizer.from_pretrained("Arnajak/mt5_base-thai_government_parapharse")
